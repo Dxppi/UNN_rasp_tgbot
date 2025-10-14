@@ -1,6 +1,6 @@
 import logging
-from bot.config import create_application, CommandHandler
-from bot.handlers.commands import start_command, help_command
+from bot.config import create_application, CommandHandler, filters, WAITING_FOR_GROUP, MessageHandler, ConversationHandler
+from bot.handlers.commands import start_command, today_command, tomorrow_command, week_command, handle_group_input, cancel
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -8,19 +8,26 @@ logging.basicConfig(
 )
 
 
-def main():
-    """Основная функция запуска бота"""
-    try:
-        application = create_application()
+def main() -> None:
+    application = create_application()
 
-        application.add_handler(CommandHandler("start", start_command))
-        application.add_handler(CommandHandler("help", help_command))
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start_command)],
+        states={
+            WAITING_FOR_GROUP: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND,
+                               handle_group_input)
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+    application.add_handler(conv_handler)
+    application.add_handler(CommandHandler("today", today_command))
+    application.add_handler(CommandHandler("tomorrow", tomorrow_command))
+    application.add_handler(CommandHandler("week", week_command))
 
-        print("Бот запущен!")
-        application.run_polling()
-
-    except Exception as e:
-        logging.error(f"Ошибка при запуске бота: {e}")
+    print("Бот запущен!")
+    application.run_polling()
 
 
 if __name__ == '__main__':
