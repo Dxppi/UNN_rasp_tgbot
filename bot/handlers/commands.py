@@ -1,3 +1,6 @@
+import sqlite3
+import os
+
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram import ReplyKeyboardRemove
@@ -8,16 +11,48 @@ from parser.parseData import fetch_group_id, make_schedule, print_schedule, fetc
 from datetime import datetime, timedelta
 
 
+def get_user_group_from_db(user_id: int) -> dict:
+    """Получает данные группы пользователя из базы данных"""
+    try:
+        connection = sqlite3.connect(os.getenv("DB_PATH"), timeout=5)
+        cursor = connection.cursor()
+        cursor.execute(
+            "SELECT group_number, group_id FROM user_groups WHERE user_id = ?",
+            (user_id,)
+        )
+        result = cursor.fetchone()
+
+        if result:
+            return {
+                'group_number': result[0],
+                'group_id': result[1]
+            }
+        return None
+    except Exception as e:
+        print(f"Ошибка при получении группы из БД: {e}")
+        return None
+
+
 def require_group(func):
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        if 'group_id' not in context.user_data:
-            await update.message.reply_text(
-                "Сначала установите группу с помощью команды /start\n"
-                "Введите /start и затем номер вашей группы"
-            )
-            return
-        return await func(update, context, *args, **kwargs)
+        user_id = update.effective_user.id
+
+        if 'group_id' in context.user_data:
+            return await func(update, context, *args, **kwargs)
+
+        group_data = get_user_group_from_db(user_id)
+        if group_data:
+            context.user_data['group_number'] = group_data['group_number']
+            context.user_data['group_id'] = group_data['group_id']
+            return await func(update, context, *args, **kwargs)
+
+        await update.message.reply_text(
+            "Сначала установите группу с помощью команды /start\n"
+            "Введите /start и затем номер вашей группы"
+        )
+        return
+
     return wrapper
 
 
@@ -42,10 +77,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_group_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    user_id = update.effective_user.id
     group_number = update.message.text.strip()
     group_id = fetch_group_id(group_number)
     context.user_data['group_number'] = group_number
     context.user_data['group_id'] = group_id
+
+    connection = sqlite3.connect(os.getenv("DB_PATH"), timeout=5)
+    with connection:
+        connection.execute(
+            "INSERT OR REPLACE INTO user_groups (user_id, group_number, group_id) VALUES (?, ?, ?)",
+            (user_id, group_number, group_id)
+        )
 
     await update.message.reply_text(
         f"Номер группы '{group_number}' сохранен!\n"
