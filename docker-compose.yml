@@ -1,0 +1,9 @@
+services:
+  bot:
+    build: .
+    container_name: rasp_bot
+    env_file: .env
+    volumes:
+      - ./data:/app/database.sqlite3
+    restart: unless-stopped
+    tty: true
