@@ -35,3 +35,12 @@ pip install -r requirements.txt
 ```bash
 python3 -m bot
 ```
+
+## Docker (локально)
+
+Собираем образ:
+
+```bash
+docker-compose build
+docker-compose up
+```
