@@ -9,6 +9,7 @@ from functools import wraps
 from bot.config import ConversationHandler, WAITING_FOR_GROUP
 from parser.parseData import fetch_group_id, make_schedule, print_schedule, fetch_schedule
 from datetime import datetime, timedelta
+from bot.keyboards import main_menu_keyboard
 
 
 def get_user_group_from_db(user_id: int) -> dict:
@@ -72,6 +73,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     await update.message.reply_text(welcome_text)
 
+    async def start_command(update, context):
+        await update.message.reply_text(
+            "Выберите действие:",
+            reply_markup=main_menu_keyboard()
+        )
+
     return WAITING_FOR_GROUP
 
 
@@ -91,8 +98,10 @@ async def handle_group_input(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
 
     await update.message.reply_text(
-        f"Номер группы '{group_number}' сохранен!\n"
+        f"Номер группы '{group_number}' сохранен!\n",
+        reply_markup=main_menu_keyboard()
     )
+
     return ConversationHandler.END
 
 
