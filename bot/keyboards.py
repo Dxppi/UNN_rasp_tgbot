@@ -1,7 +1,4 @@
-from typing import Dict, Any
-
-
-def main_menu_keyboard() -> Dict[str, Any]:
+def main_menu_keyboard() -> dict:
     """Создает клавиатуру главного меню"""
     keyboard = {
         "keyboard": [["Сегодня", "Завтра", "Неделя"], ["Помощь"]],
@@ -11,6 +8,6 @@ def main_menu_keyboard() -> Dict[str, Any]:
     return keyboard
 
 
-def remove_keyboard() -> Dict[str, Any]:
+def remove_keyboard() -> dict:
     """Создает пустую клавиатуру для удаления"""
     return {"remove_keyboard": True}
