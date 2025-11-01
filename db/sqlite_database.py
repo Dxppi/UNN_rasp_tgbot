@@ -1,11 +1,10 @@
 import sqlite3
-from typing import Optional, Dict
 from db.database_interface import DatabaseInterface
 from bot.config import DB_PATH
 
 
 class SQLiteDatabase(DatabaseInterface):
-    def __init__(self, db_path: str = DB_PATH):
+    def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
         self._create_table()
 
@@ -15,8 +14,7 @@ class SQLiteDatabase(DatabaseInterface):
         with connection:
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS user_groups
-                (
+                CREATE TABLE IF NOT EXISTS user_groups (
                     id INTEGER PRIMARY KEY,
                     user_id INTEGER UNIQUE NOT NULL,
                     group_number TEXT NOT NULL,
@@ -25,7 +23,7 @@ class SQLiteDatabase(DatabaseInterface):
             """
             )
 
-    def get_user_group(self, user_id: int) -> Optional[Dict[str, str]]:
+    def get_user_group(self, user_id):
         try:
             connection = sqlite3.connect(self.db_path, timeout=5)
             cursor = connection.cursor()
@@ -40,7 +38,7 @@ class SQLiteDatabase(DatabaseInterface):
         except Exception as e:
             raise Exception(f"Ошибка при получении группы пользователя: {e}")
 
-    def save_user_group(self, user_id: int, group_number: str, group_id: str) -> None:
+    def save_user_group(self, user_id, group_number, group_id):
         connection = sqlite3.connect(self.db_path, timeout=5)
         with connection:
             connection.execute(
