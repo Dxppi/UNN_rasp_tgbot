@@ -4,6 +4,9 @@ services:
     container_name: rasp_bot
     env_file: .env
     volumes:
-      - ./data:/app/database.sqlite3
+      - ./data:/data
+    environment:
+      - DB_PATH=/data/database.sqlite
     restart: unless-stopped
     tty: true
+

@@ -4,4 +4,6 @@ plan.md
 *__pycache__
 schedule_result.json
 database.sqlite
-data/
+data/*.sqlite
+data/*.sqlite3
+.ruff_cache/

@@ -1,142 +1,191 @@
-import sqlite3
-import os
-
-from telegram import Update
-from telegram.ext import ContextTypes
-from telegram import ReplyKeyboardRemove
-
-from functools import wraps
-from bot.config import ConversationHandler, WAITING_FOR_GROUP
-from parser.parseData import fetch_group_id, make_schedule, print_schedule, fetch_schedule
+import time
+from typing import Tuple
 from datetime import datetime, timedelta
-from bot.keyboards import main_menu_keyboard
+from bot.dispatcher import Update, Context, State
+from bot.config import (
+    CONVERSATION_END,
+    MAX_MESSAGE_SIZE,
+    MESSAGE_DELAY,
+)
+from parser.parseData import (
+    fetch_group_id,
+    make_schedule,
+    fetch_schedule,
+    split_schedule_by_size,
+)
+from bot.keyboards import main_menu_keyboard, remove_keyboard
+from db.database_interface import DatabaseInterface
 
 
-def get_user_group_from_db(user_id: int) -> dict:
-    """Получает данные группы пользователя из базы данных"""
-    try:
-        connection = sqlite3.connect(os.getenv("DB_PATH"), timeout=5)
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT group_number, group_id FROM user_groups WHERE user_id = ?",
-            (user_id,)
-        )
-        result = cursor.fetchone()
+database: DatabaseInterface = None
 
-        if result:
-            return {
-                'group_number': result[0],
-                'group_id': result[1]
-            }
-        return None
-    except Exception as e:
-        print(f"Ошибка при получении группы из БД: {e}")
-        return None
+
+def set_database(db: DatabaseInterface):
+    """Устанавливает базу данных для использования в handlers"""
+    global database
+    database = db
+
+
+def get_user_group_from_db(user_id: int):
+    """Получает группу пользователя из БД"""
+    return database.get_user_group(user_id) if database else None
 
 
 def require_group(func):
-    @wraps(func)
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        user_id = update.effective_user.id
+    def wrapper(update: Update, context: Context, *args, **kwargs):
+        user_id = update.user_id
+        user_data = context.get_user_data(user_id)
 
-        if 'group_id' in context.user_data:
-            return await func(update, context, *args, **kwargs)
+        if "group_id" in user_data:
+            return func(update, context, *args, **kwargs)
 
         group_data = get_user_group_from_db(user_id)
         if group_data:
-            context.user_data['group_number'] = group_data['group_number']
-            context.user_data['group_id'] = group_data['group_id']
-            return await func(update, context, *args, **kwargs)
+            user_data["group_number"] = group_data["group_number"]
+            user_data["group_id"] = group_data["group_id"]
+            return func(update, context, *args, **kwargs)
 
-        await update.message.reply_text(
-            "Сначала установите группу с помощью команды /start\n"
-            "Введите /start и затем номер вашей группы"
+        context.telegram_api.send_message(
+            update.chat_id, "Сначала установите группу с помощью команды /start"
         )
-        return
 
     return wrapper
 
 
 def get_moscow_time() -> datetime:
+    """Получает текущее время в часовом поясе Москвы"""
     return datetime.now() + timedelta(hours=3)
 
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
+def start_command(update: Update, context: Context):
+    user_id = update.user_id
+    chat_id = update.chat_id
+    user_data = context.get_user_data(user_id)
 
-    welcome_text = f"""
-Привет, {user.first_name}! 👋
+    group_data = get_user_group_from_db(user_id)
 
-Я бот с расписанием института.
-Введите номер группы!
+    if group_data:
+        user_data["group_number"] = group_data["group_number"]
+        user_data["group_id"] = group_data["group_id"]
 
-    """
-    await update.message.reply_text(welcome_text)
+        context.telegram_api.send_message(
+            chat_id,
+            f"Добро пожаловать! Ваша группа: {group_data['group_number']}",
+            reply_markup=main_menu_keyboard(),
+        )
+        return CONVERSATION_END
+    else:
+        context.telegram_api.send_message(
+            chat_id, "Вас приветствует бот расписания ННГУ, введите номер группы"
+        )
+        context.set_user_state(user_id, State.WAITING_FOR_GROUP)
+        return State.WAITING_FOR_GROUP
 
-    async def start_command(update, context):
-        await update.message.reply_text(
-            "Выберите действие:",
-            reply_markup=main_menu_keyboard()
+
+def handle_group_input(update: Update, context: Context):
+    user_id = update.user_id
+    chat_id = update.chat_id
+    group_number = update.text.strip()
+
+    try:
+        group_id = fetch_group_id(group_number)
+        user_data = context.get_user_data(user_id)
+        user_data["group_number"] = group_number
+        user_data["group_id"] = group_id
+
+        if database:
+            database.save_user_group(user_id, group_number, group_id)
+
+        context.telegram_api.send_message(
+            chat_id,
+            f"Номер группы '{group_number}' сохранен!\n",
+            reply_markup=main_menu_keyboard(),
         )
 
-    return WAITING_FOR_GROUP
-
-
-async def handle_group_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    user_id = update.effective_user.id
-    group_number = update.message.text.strip()
-    group_id = fetch_group_id(group_number)
-    context.user_data['group_number'] = group_number
-    context.user_data['group_id'] = group_id
-
-    connection = sqlite3.connect(os.getenv("DB_PATH"), timeout=5)
-    with connection:
-        connection.execute(
-            "INSERT OR REPLACE INTO user_groups (user_id, group_number, group_id) VALUES (?, ?, ?)",
-            (user_id, group_number, group_id)
+        context.clear_user_state(user_id)
+        return CONVERSATION_END
+    except Exception as e:
+        context.telegram_api.send_message(
+            chat_id, f"Ошибка: {str(e)}\nПопробуйте ввести группу снова."
         )
-
-    await update.message.reply_text(
-        f"Номер группы '{group_number}' сохранен!\n",
-        reply_markup=main_menu_keyboard()
-    )
-
-    return ConversationHandler.END
+        return State.WAITING_FOR_GROUP
 
 
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Обработчик отмены"""
-    await update.message.reply_text(
+def change_command(update: Update, context: Context):
+    """Позволяет пользователю изменить свою группу"""
+    user_id = update.user_id
+    chat_id = update.chat_id
+
+    context.telegram_api.send_message(chat_id, "Введите новый номер группы")
+    context.set_user_state(user_id, State.WAITING_FOR_GROUP)
+    return State.WAITING_FOR_GROUP
+
+
+def cancel(update: Update, context: Context):
+    context.telegram_api.send_message(
+        update.chat_id,
         "Диалог отменен. Используй /start чтобы начать заново.",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=remove_keyboard(),
     )
-    return ConversationHandler.END
+    context.clear_user_state(update.user_id)
+    return CONVERSATION_END
 
 
-@require_group
-async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def _get_date_range(period: str) -> Tuple[datetime.date, datetime.date]:
+    """Возвращает диапазон дат для периода"""
     current_date = get_moscow_time().date()
-    await send_schedule(update, context, current_date, current_date)
+
+    if period == "today":
+        return current_date, current_date
+    elif period == "tomorrow":
+        tomorrow = current_date + timedelta(days=1)
+        return tomorrow, tomorrow
+    elif period == "week":
+        return current_date, current_date + timedelta(days=7)
+    return current_date, current_date
 
 
 @require_group
-async def tomorrow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tomorrow_date = (get_moscow_time() + timedelta(days=1)).date()
-    await send_schedule(update, context, tomorrow_date, tomorrow_date)
+def today_command(update: Update, context: Context):
+    start_date, end_date = _get_date_range("today")
+    send_schedule(update, context, start_date, end_date)
 
 
 @require_group
-async def week_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    current_date = get_moscow_time().date()
-    week_later = current_date + timedelta(days=7)
-    await send_schedule(update, context, current_date, week_later)
+def tomorrow_command(update: Update, context: Context):
+    start_date, end_date = _get_date_range("tomorrow")
+    send_schedule(update, context, start_date, end_date)
 
 
-async def send_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
-                        start_date: datetime.date, end_date: datetime.date):
-    schedules = fetch_schedule(
-        context.user_data['group_id'], start_date, end_date)
-    schedule = make_schedule(schedules)
-    text = print_schedule(schedule)
-    await update.message.reply_text(text, parse_mode='Markdown')
+@require_group
+def week_command(update: Update, context: Context):
+    start_date, end_date = _get_date_range("week")
+    send_schedule(update, context, start_date, end_date)
+
+
+def send_schedule(
+    update: Update, context: Context, start_date: datetime.date, end_date: datetime.date
+):
+    chat_id = update.chat_id
+    user_data = context.get_user_data(update.user_id)
+    group_id = user_data.get("group_id")
+
+    if not group_id:
+        context.telegram_api.send_message(
+            chat_id, "Группа не установлена. Используйте /start."
+        )
+        return
+
+    try:
+        start_date_str = start_date.strftime("%Y.%m.%d")
+        end_date_str = end_date.strftime("%Y.%m.%d")
+
+        schedules = fetch_schedule(group_id, start_date_str, end_date_str)
+        schedule = make_schedule(schedules)
+        messages = split_schedule_by_size(schedule, max_size=MAX_MESSAGE_SIZE)
+
+        for message in messages:
+            context.telegram_api.send_message(chat_id, message, parse_mode="Markdown")
+            time.sleep(MESSAGE_DELAY)
+    except Exception as e:
+        context.telegram_api.send_message(chat_id, f"Ошибка: {str(e)}")

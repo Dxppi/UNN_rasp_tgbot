@@ -1,16 +1,14 @@
 import os
 from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import Application, ConversationHandler, CommandHandler, filters, MessageHandler
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("TOKEN")
 if not BOT_TOKEN:
-    raise "Не найден токен в переменных окружения"
+    raise ValueError("Не найден токен в переменных окружения")
 
+DB_PATH = os.getenv("DB_PATH", "database.sqlite")
 WAITING_FOR_GROUP = 1
-
-
-def create_application():
-    return Application.builder().token(BOT_TOKEN).build()
+CONVERSATION_END = -1
+MESSAGE_DELAY = 0.1
+MAX_MESSAGE_SIZE = 1000
