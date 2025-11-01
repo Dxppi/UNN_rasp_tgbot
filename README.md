@@ -291,24 +291,3 @@ UNN_rasp_tgbot/
 ├── Dockerfile             # Docker configuration
 └── README.md             # Documentation
 ```
-
-### 🔧 Technologies
-
-- **Python 3.11+** - main language
-- **urllib.request** - HTTP requests (no external libraries)
-- **SQLite** - database
-- **python-dotenv** - environment variables loader
-- **Long Polling** - receiving updates from Telegram
-
-### 📝 Features
-
-- ✅ Pure HTTP (without python-telegram-bot)
-- ✅ Dispatcher with state management (state machine)
-- ✅ Automatic user group saving
-- ✅ Long message splitting (1000 character limit)
-- ✅ SOLID architecture
-- ✅ Database interface (easily extensible)
-
-### 📄 License
-
-This project is for educational purposes.
