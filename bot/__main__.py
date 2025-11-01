@@ -1,37 +1,40 @@
-import logging
-from bot.config import create_application, CommandHandler, filters, WAITING_FOR_GROUP, MessageHandler, ConversationHandler
-from bot.handlers.commands import start_command, today_command, tomorrow_command, week_command, handle_group_input, cancel
-from bot.handlers.text_actions import handle_button_text
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+from bot.config import BOT_TOKEN
+from bot.telegram_api import TelegramAPI
+from bot.dispatcher import Dispatcher, State
+from bot.longpolling import LongPolling
+from bot.handlers.commands import (
+    start_command,
+    change_command,
+    today_command,
+    tomorrow_command,
+    week_command,
+    handle_group_input,
+    cancel,
+    set_database,
 )
+from bot.handlers.text_actions import handle_button_text
+from db.sqlite_database import SQLiteDatabase
 
 
 def main() -> None:
-    application = create_application()
+    db = SQLiteDatabase()
+    set_database(db)
 
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start_command)],
-        states={
-            WAITING_FOR_GROUP: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND,
-                               handle_group_input)
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-    )
-    application.add_handler(conv_handler)
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, handle_button_text))
-    application.add_handler(CommandHandler("today", today_command))
-    application.add_handler(CommandHandler("tomorrow", tomorrow_command))
-    application.add_handler(CommandHandler("week", week_command))
+    telegram_api = TelegramAPI(BOT_TOKEN)
+    dispatcher = Dispatcher(telegram_api)
 
-    print("Бот запущен!")
-    application.run_polling()
+    dispatcher.register_command("start", start_command)
+    dispatcher.register_command("change", change_command)
+    dispatcher.register_command("today", today_command)
+    dispatcher.register_command("tomorrow", tomorrow_command)
+    dispatcher.register_command("week", week_command)
+    dispatcher.register_command("cancel", cancel)
+    dispatcher.register_state_handler(State.WAITING_FOR_GROUP, handle_group_input)
+    dispatcher.register_message_handler(handle_button_text)
+
+    long_polling = LongPolling(telegram_api, dispatcher)
+    long_polling.start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
