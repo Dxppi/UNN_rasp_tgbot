@@ -1,116 +1,44 @@
-from enum import Enum
-from bot.config import WAITING_FOR_GROUP, CONVERSATION_END
-
-
-class State(Enum):
-    IDLE = 0
-    WAITING_FOR_GROUP = 1
-
-
-class Update:
-    def __init__(self, update_data):
-        self.update_data = update_data
-        self.message = update_data.get("message", {})
-
-    @property
-    def update_id(self):
-        return self.update_data.get("update_id", 0)
-
-    @property
-    def text(self):
-        return self.message.get("text") if self.message else None
-
-    @property
-    def chat_id(self):
-        return self.message.get("chat", {}).get("id") if self.message else None
-
-    @property
-    def user_id(self):
-        return self.message.get("from", {}).get("id") if self.message else None
-
-    @property
-    def first_name(self):
-        return self.message.get("from", {}).get("first_name") if self.message else None
-
-    def is_command(self):
-        return self.text and self.text.startswith("/")
-
-
-class Context:
-    def __init__(self, telegram_api, user_states, user_data):
-        self.telegram_api = telegram_api
-        self.user_states = user_states
-        self.user_data = user_data
-
-    def get_user_state(self, user_id):
-        return self.user_states.get(user_id, State.IDLE)
-
-    def set_user_state(self, user_id, state):
-        self.user_states[user_id] = state
-
-    def clear_user_state(self, user_id):
-        if user_id in self.user_states:
-            del self.user_states[user_id]
-
-    def get_user_data(self, user_id):
-        if user_id not in self.user_data:
-            self.user_data[user_id] = {}
-        return self.user_data[user_id]
+from bot.handlers.handle import Handler
+from bot.handler_result import HandlerStatus
+from db.database_interface import DatabaseInterface
 
 
 class Dispatcher:
-    def __init__(self, telegram_api):
-        self.telegram_api = telegram_api
-        self.user_states = {}
-        self.user_data = {}
-        self.command_handlers = {}
-        self.message_handlers = []
-        self.state_handlers = {}
+    def __init__(self, database: DatabaseInterface):
+        """Инициализирует диспетчер с базой данных"""
+        self.database = database
+        self._handlers = []
+        self._user_states = {}
 
-    def register_command(self, command, handler):
-        self.command_handlers[command] = handler
+    def add_handlers(self, *handlers: Handler):
+        """Добавляет хендлеры в цепочку обработки"""
+        for handler in handlers:
+            self._handlers.append(handler)
 
-    def register_message_handler(self, handler):
-        self.message_handlers.append(handler)
+    def dispatch(self, update: dict):
+        """Обрабатывает обновление через цепочку хендлеров"""
+        telegram_id = None
+        if "message" in update:
+            telegram_id = update["message"]["from"]["id"]
+        elif "callback_query" in update:
+            telegram_id = update["callback_query"]["from"]["id"]
 
-    def register_state_handler(self, state, handler):
-        if state not in self.state_handlers:
-            self.state_handlers[state] = []
-        self.state_handlers[state].append(handler)
-
-    def _create_context(self, user_id):
-        return Context(self.telegram_api, self.user_states, self.user_data)
-
-    def _handle_result(self, result, context, user_id):
-        if isinstance(result, State):
-            context.set_user_state(user_id, result)
-        elif result == WAITING_FOR_GROUP:
-            context.set_user_state(user_id, State.WAITING_FOR_GROUP)
-        elif result == CONVERSATION_END:
-            context.clear_user_state(user_id)
-
-    def process_update(self, update):
-        if not update.chat_id or not update.user_id:
+        if not telegram_id:
             return
 
-        user_id = update.user_id
-        context = self._create_context(user_id)
-        current_state = context.get_user_state(user_id)
+        user_state = self._user_states.get(telegram_id)
+        user_data = {}
 
-        if update.is_command():
-            command = update.text.split()[0].lower().lstrip("/")
-            if command in self.command_handlers:
-                result = self.command_handlers[command](update, context)
-                self._handle_result(result, context, user_id)
-                return
+        for handler in self._handlers:
+            if handler.can_handle(update, user_state, user_data):
+                result = handler.handle(update, user_state, user_data, self)
 
-        if current_state != State.IDLE and current_state in self.state_handlers:
-            for handler in self.state_handlers[current_state]:
-                result = handler(update, context)
-                self._handle_result(result, context, user_id)
-                return
+                if "state" in user_data:
+                    new_state = user_data["state"]
+                    if new_state is None:
+                        self._user_states.pop(telegram_id, None)
+                    else:
+                        self._user_states[telegram_id] = new_state
 
-        if update.text and not update.is_command():
-            for handler in self.message_handlers:
-                handler(update, context)
-                return
+                if result == HandlerStatus.STOP:
+                    break
