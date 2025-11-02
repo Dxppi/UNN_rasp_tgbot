@@ -26,15 +26,16 @@ class SQLiteDatabase(DatabaseInterface):
     def get_user_group(self, user_id):
         try:
             connection = sqlite3.connect(self.db_path, timeout=5)
-            cursor = connection.cursor()
-            cursor.execute(
-                "SELECT group_number, group_id FROM user_groups WHERE user_id = ?",
-                (user_id,),
-            )
-            result = cursor.fetchone()
-            if result:
-                return {"group_number": result[0], "group_id": result[1]}
-            raise Exception("Группа пользователя не найдена")
+            with connection:
+                cursor = connection.cursor()
+                cursor.execute(
+                    "SELECT group_number, group_id FROM user_groups WHERE user_id = ?",
+                    (user_id,),
+                )
+                result = cursor.fetchone()
+                if result:
+                    return {"group_number": result[0], "group_id": result[1]}
+                return None
         except Exception as e:
             raise Exception(f"Ошибка при получении группы пользователя: {e}")
 

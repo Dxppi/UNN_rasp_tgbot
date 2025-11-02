@@ -1,42 +1,35 @@
-import urllib.request
 import json
+import urllib.request
+from bot.config import BOT_TOKEN
 
 
-class TelegramAPI:
-    BASE_URL = "https://api.telegram.org/bot"
+def get_telegram_base_uri():
+    """Возвращает базовый URI для Telegram Bot API"""
+    return f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-    def __init__(self, token):
-        self.api_url = f"{self.BASE_URL}{token}"
 
-    def _read_json(self, req):
-        """Открывает URL, читает ответ и возвращает result или ошибку."""
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            if result.get("ok"):
-                return result["result"]
-            raise Exception(result.get("description", "API Error"))
+def make_request(method: str, **kwargs):
+    json_data = json.dumps(kwargs).encode("utf-8")
+    request = urllib.request.Request(
+        method="POST",
+        url=f"{get_telegram_base_uri()}/{method}",
+        data=json_data,
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    with urllib.request.urlopen(request) as response:
+        response_body = response.read().decode("utf-8")
+        response_json = json.loads(response_body)
+        assert response_json["ok"]
+        return response_json["result"]
 
-    def _post(self, method, data=None):
-        url = f"{self.api_url}/{method}"
-        data_bytes = json.dumps(data or {}).encode("utf-8")
 
-        req = urllib.request.Request(
-            url,
-            data=data_bytes,
-            headers={"Content-Type": "application/json"},
-        )
-        return self._read_json(req)
+def get_updates(**kwargs):
+    """Получает обновления от Telegram API"""
+    return make_request("getUpdates", **kwargs)
 
-    def get_updates(self, offset=None, timeout=30):
-        data = {"timeout": timeout}
-        if offset is not None:
-            data["offset"] = offset
-        return self._post("getUpdates", data)
 
-    def send_message(self, chat_id, text, reply_markup=None, parse_mode=None):
-        data = {"chat_id": chat_id, "text": text}
-        if reply_markup:
-            data["reply_markup"] = reply_markup
-        if parse_mode:
-            data["parse_mode"] = parse_mode
-        return self._post("sendMessage", data)
+def send_message(chat_id, text, **kwargs):
+    """Отправляет сообщение в чат"""
+    return make_request("sendMessage", chat_id=chat_id, text=text, **kwargs)
