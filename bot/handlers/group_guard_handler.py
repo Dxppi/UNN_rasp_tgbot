@@ -17,7 +17,7 @@ class GroupGuardHandler(Handler):
     def handle(self, update: dict, state, data: dict, messenger, database):
         """Проверяет группу и блокирует команды без группы"""
         group_id = data.get("group_id")
-        
+
         if group_id is not None:
             return HandlerStatus.CONTINUE
 
@@ -28,14 +28,14 @@ class GroupGuardHandler(Handler):
         chat_id = update["message"]["chat"]["id"]
 
         is_command = text.startswith("/")
-        is_allowed_command = any(text.startswith(cmd) for cmd in self._COMMANDS_WITHOUT_GROUP)
+        is_allowed_command = any(
+            text.startswith(cmd) for cmd in self._COMMANDS_WITHOUT_GROUP
+        )
         is_schedule_button = text in self._SCHEDULE_BUTTONS
         is_allowed_button = text in self._ALLOWED_BUTTONS
 
         if is_schedule_button or (is_command and not is_allowed_command):
-            messenger.send_message(
-                chat_id, "Сначала введите номер группы в /start"
-            )
+            messenger.send_message(chat_id, "Сначала введите номер группы в /start")
             return HandlerStatus.STOP
 
         if state != "WAITING_FOR_GROUP" and not is_command and not is_allowed_button:
@@ -47,4 +47,3 @@ class GroupGuardHandler(Handler):
             return HandlerStatus.STOP
 
         return HandlerStatus.CONTINUE
-
