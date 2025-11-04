@@ -10,11 +10,10 @@ def test_fetch_group_id(mocker):
         {"number": "test_name", "groupOid": "11111"},
     ]
 
-    mock_urlopen = mocker.patch('urllib.request.urlopen', autospec=True)
+    mock_urlopen = mocker.patch("urllib.request.urlopen", autospec=True)
 
     mock_response = mocker.Mock()
-    mock_response.read.return_value = json.dumps(
-        fake_response_data).encode('utf-8')
+    mock_response.read.return_value = json.dumps(fake_response_data).encode("utf-8")
     mock_urlopen.return_value.__enter__.return_value = mock_response
 
     result = fetch_group_id(group_name)
