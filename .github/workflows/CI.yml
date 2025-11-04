@@ -43,3 +43,5 @@ jobs:
       - name: Check with pytest
         run: |
           pytest tests
+        env:
+          TOKEN: fake_token
