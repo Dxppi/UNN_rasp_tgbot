@@ -26,6 +26,7 @@ class TodayHandler(Handler):
 
         current_date = get_moscow_time().date()
         send_schedule_to_user(
+            dispatcher.messenger,
             chat_id,
             group_id,
             current_date,

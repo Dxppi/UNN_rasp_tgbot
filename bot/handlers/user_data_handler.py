@@ -2,7 +2,6 @@
 
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
-from bot.telegram_api import send_message
 
 
 class UserDataHandler(Handler):
@@ -42,7 +41,7 @@ class UserDataHandler(Handler):
                     and not text.startswith("/cancel")
                 ):
                     chat_id = update["message"]["chat"]["id"]
-                    send_message(
+                    dispatcher.messenger.send_message(
                         chat_id,
                         "Вас приветствует бот расписания ННГУ, введите номер группы",
                     )

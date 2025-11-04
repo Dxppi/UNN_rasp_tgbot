@@ -3,7 +3,6 @@
 import time
 from datetime import datetime, timedelta
 from bot.config import MAX_MESSAGE_SIZE, MESSAGE_DELAY
-from bot.telegram_api import send_message
 from parser.parseData import fetch_schedule, make_schedule, split_schedule_by_size
 
 
@@ -13,6 +12,7 @@ def get_moscow_time():
 
 
 def send_schedule_to_user(
+    messenger,
     chat_id: int,
     group_id: str,
     start_date: datetime.date,
@@ -20,7 +20,7 @@ def send_schedule_to_user(
 ):
     """Отправляет расписание пользователю"""
     if not group_id:
-        send_message(chat_id, "Группа не установлена. Используйте /start.")
+        messenger.send_message(chat_id, "Группа не установлена. Используйте /start.")
         return
 
     try:
@@ -32,7 +32,7 @@ def send_schedule_to_user(
         messages = split_schedule_by_size(schedule, max_size=MAX_MESSAGE_SIZE)
 
         for message in messages:
-            send_message(chat_id, message, parse_mode="Markdown")
+            messenger.send_message(chat_id, message, parse_mode="Markdown")
             time.sleep(MESSAGE_DELAY)
     except Exception as e:
-        send_message(chat_id, f"Ошибка: {str(e)}")
+        messenger.send_message(chat_id, f"Ошибка: {str(e)}")

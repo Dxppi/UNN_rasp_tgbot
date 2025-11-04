@@ -3,7 +3,6 @@
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
 from bot.keyboards import remove_keyboard
-from bot.telegram_api import send_message
 
 
 class CancelHandler(Handler):
@@ -21,7 +20,7 @@ class CancelHandler(Handler):
         """Обрабатывает команду /cancel"""
         chat_id = update["message"]["chat"]["id"]
 
-        send_message(
+        dispatcher.messenger.send_message(
             chat_id,
             "Диалог отменен. Используй /start чтобы начать заново.",
             reply_markup=remove_keyboard(),

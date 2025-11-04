@@ -1,8 +1,8 @@
-from bot.telegram_api import get_updates
 from bot.dispatcher import Dispatcher
+from domain.messenger import Messenger
 
 
-def start_long_polling(dispatcher: Dispatcher):
+def start_long_polling(dispatcher: Dispatcher, messenger: Messenger):
     """Запускает Long Polling"""
     print("Бот запущен!")
     next_update_offset = 0
@@ -10,7 +10,7 @@ def start_long_polling(dispatcher: Dispatcher):
     try:
         while True:
             offset = next_update_offset if next_update_offset > 0 else None
-            updates = get_updates(offset=offset, timeout=5)
+            updates = messenger.get_updates(offset=offset, timeout=5)
 
             for update in updates:
                 dispatcher.dispatch(update)
