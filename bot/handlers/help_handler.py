@@ -44,12 +44,12 @@ class HelpHandler(Handler):
             )
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /help"""
         chat_id = update["message"]["chat"]["id"]
         group_number = data.get("group_number")
 
         help_text = build_help_text(group_number)
-        dispatcher.messenger.send_message(chat_id, help_text, parse_mode="Markdown")
+        messenger.send_message(chat_id, help_text, parse_mode="Markdown")
 
         return HandlerStatus.STOP

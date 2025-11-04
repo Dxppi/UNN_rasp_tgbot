@@ -33,7 +33,9 @@ class Dispatcher:
 
         for handler in self._handlers:
             if handler.can_handle(update, user_state, user_data):
-                result = handler.handle(update, user_state, user_data, self)
+                result = handler.handle(
+                    update, user_state, user_data, self.messenger, self.database
+                )
 
                 if "state" in user_data:
                     new_state = user_data["state"]

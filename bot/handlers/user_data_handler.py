@@ -10,7 +10,7 @@ class UserDataHandler(Handler):
     def can_handle(self, update: dict, state, data: dict):
         return True
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Загружает данные пользователя из БД и проверяет группу"""
         telegram_id = None
         if "message" in update:
@@ -21,8 +21,8 @@ class UserDataHandler(Handler):
         if not telegram_id:
             return HandlerStatus.STOP
 
-        if dispatcher.database:
-            group_data = dispatcher.database.get_user_group(telegram_id)
+        if database:
+            group_data = database.get_user_group(telegram_id)
             if group_data:
                 data["group_number"] = group_data["group_number"]
                 data["group_id"] = group_data["group_id"]
@@ -41,7 +41,7 @@ class UserDataHandler(Handler):
                     and not text.startswith("/cancel")
                 ):
                     chat_id = update["message"]["chat"]["id"]
-                    dispatcher.messenger.send_message(
+                    messenger.send_message(
                         chat_id,
                         "Вас приветствует бот расписания ННГУ, введите номер группы",
                     )

@@ -20,7 +20,7 @@ class WeekHandler(Handler):
             )
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /week"""
         chat_id = update["message"]["chat"]["id"]
         group_id = data["group_id"]
@@ -28,7 +28,7 @@ class WeekHandler(Handler):
         current_date = get_moscow_time().date()
         end_date = current_date + timedelta(days=7)
         send_schedule_to_user(
-            dispatcher.messenger,
+            messenger,
             chat_id,
             group_id,
             current_date,

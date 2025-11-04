@@ -16,11 +16,11 @@ class CancelHandler(Handler):
             and update["message"]["text"].strip().startswith("/cancel")
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /cancel"""
         chat_id = update["message"]["chat"]["id"]
 
-        dispatcher.messenger.send_message(
+        messenger.send_message(
             chat_id,
             "Диалог отменен. Используй /start чтобы начать заново.",
             reply_markup=remove_keyboard(),
