@@ -34,12 +34,27 @@ class UserDataHandler(Handler):
         if group_id is None:
             if "message" in update and "text" in update["message"]:
                 text = update["message"]["text"].strip()
-
-                if (
-                    not text.startswith("/start")
-                    and not text.startswith("/change")
-                    and not text.startswith("/cancel")
-                ):
+                
+                allowed_commands = ["/start", "/change", "/cancel", "/help"]
+                commands_requiring_group = ["/today", "/tomorrow", "/week"]
+                buttons_requiring_group = ["Сегодня", "Завтра", "Неделя"]
+                
+                is_command_requiring_group = any(
+                    text.startswith(cmd) for cmd in commands_requiring_group
+                )
+                is_button_requiring_group = text in buttons_requiring_group
+                is_allowed_command = any(
+                    text.startswith(cmd) for cmd in allowed_commands
+                )
+                
+                if is_command_requiring_group or is_button_requiring_group:
+                    chat_id = update["message"]["chat"]["id"]
+                    messenger.send_message(
+                        chat_id,
+                        "Сначала введите номер группы в /start"
+                    )
+                    return HandlerStatus.STOP
+                elif not is_allowed_command and not text.startswith("/"):
                     chat_id = update["message"]["chat"]["id"]
                     messenger.send_message(
                         chat_id,
