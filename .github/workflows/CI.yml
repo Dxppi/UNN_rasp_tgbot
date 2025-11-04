@@ -2,9 +2,9 @@ name: CI checks
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
 
 permissions:
   contents: read
@@ -39,3 +39,9 @@ jobs:
         run: |
           black --check .
           ruff check .
+
+      - name: Check with pytest
+        run: |
+          pytest tests
+        env:
+          TOKEN: fake_token
