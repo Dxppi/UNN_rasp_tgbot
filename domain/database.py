@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 
 class DatabaseInterface(ABC):
+    """Интерфейс работы с базой данных"""
+
     @abstractmethod
     def get_user_group(self, user_id):
         """Получает группу пользователя по user_id"""

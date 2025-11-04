@@ -1,12 +1,14 @@
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
-from db.database_interface import DatabaseInterface
+from domain.database import DatabaseInterface
+from domain.messenger import Messenger
 
 
 class Dispatcher:
-    def __init__(self, database: DatabaseInterface):
-        """Инициализирует диспетчер с базой данных"""
+    def __init__(self, database: DatabaseInterface, messenger: Messenger):
+        """Инициализирует диспетчер с базой данных и мессенджером"""
         self.database = database
+        self.messenger = messenger
         self._handlers = []
         self._user_states = {}
 

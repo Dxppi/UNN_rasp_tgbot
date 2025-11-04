@@ -3,7 +3,6 @@
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
 from bot.keyboards import main_menu_keyboard
-from bot.telegram_api import send_message
 from parser.parseData import fetch_group_id
 
 
@@ -34,7 +33,7 @@ class GroupInputHandler(Handler):
             if dispatcher.database:
                 dispatcher.database.save_user_group(telegram_id, group_number, group_id)
 
-            send_message(
+            dispatcher.messenger.send_message(
                 chat_id,
                 f"Номер группы '{group_number}' сохранен!\n",
                 reply_markup=main_menu_keyboard(),
@@ -43,6 +42,8 @@ class GroupInputHandler(Handler):
             data["state"] = None
 
         except Exception as e:
-            send_message(chat_id, f"Ошибка: {str(e)}\nПопробуйте ввести группу снова.")
+            dispatcher.messenger.send_message(
+                chat_id, f"Ошибка: {str(e)}\nПопробуйте ввести группу снова."
+            )
 
         return HandlerStatus.STOP

@@ -3,7 +3,6 @@
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
 from bot.keyboards import main_menu_keyboard
-from bot.telegram_api import send_message
 
 
 class StartHandler(Handler):
@@ -24,14 +23,14 @@ class StartHandler(Handler):
 
         if group_id:
             group_number = data["group_number"]
-            send_message(
+            dispatcher.messenger.send_message(
                 chat_id,
                 f"Добро пожаловать! Ваша группа: {group_number}",
                 reply_markup=main_menu_keyboard(),
             )
             data["state"] = None
         else:
-            send_message(
+            dispatcher.messenger.send_message(
                 chat_id, "Вас приветствует бот расписания ННГУ, введите номер группы"
             )
             data["state"] = "WAITING_FOR_GROUP"

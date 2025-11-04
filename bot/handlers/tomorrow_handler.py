@@ -27,6 +27,7 @@ class TomorrowHandler(Handler):
 
         tomorrow = (get_moscow_time() + timedelta(days=1)).date()
         send_schedule_to_user(
+            dispatcher.messenger,
             chat_id,
             group_id,
             tomorrow,

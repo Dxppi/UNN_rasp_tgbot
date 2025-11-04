@@ -2,7 +2,6 @@
 
 from bot.handlers.handle import Handler
 from bot.handler_result import HandlerStatus
-from bot.telegram_api import send_message
 
 
 def build_help_text(group_number=None):
@@ -51,6 +50,6 @@ class HelpHandler(Handler):
         group_number = data.get("group_number")
 
         help_text = build_help_text(group_number)
-        send_message(chat_id, help_text, parse_mode="Markdown")
+        dispatcher.messenger.send_message(chat_id, help_text, parse_mode="Markdown")
 
         return HandlerStatus.STOP

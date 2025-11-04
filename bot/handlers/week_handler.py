@@ -28,6 +28,7 @@ class WeekHandler(Handler):
         current_date = get_moscow_time().date()
         end_date = current_date + timedelta(days=7)
         send_schedule_to_user(
+            dispatcher.messenger,
             chat_id,
             group_id,
             current_date,

@@ -1,9 +1,11 @@
 import sqlite3
-from db.database_interface import DatabaseInterface
+from domain.database import DatabaseInterface
 from bot.config import DB_PATH
 
 
-class SQLiteDatabase(DatabaseInterface):
+class DbSqlite(DatabaseInterface):
+    """Реализация интерфейса БД на SQLite"""
+
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
         self._create_table()
