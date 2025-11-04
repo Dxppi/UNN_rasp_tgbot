@@ -10,6 +10,10 @@ class Dispatcher:
         self.database = database
         self.messenger = messenger
         self._handlers = []
+        # Примечание: состояния хранятся в памяти и теряются при перезапуске.
+        # Это нормально для текущего проекта, так как используется только
+        # простое состояние WAITING_FOR_GROUP, которое легко восстановить командой /start.
+        # Для production с несколькими инстансами нужно хранить в БД.
         self._user_states = {}
 
     def add_handlers(self, *handlers: Handler):
@@ -33,7 +37,9 @@ class Dispatcher:
 
         for handler in self._handlers:
             if handler.can_handle(update, user_state, user_data):
-                result = handler.handle(update, user_state, user_data, self)
+                result = handler.handle(
+                    update, user_state, user_data, self.messenger, self.database
+                )
 
                 if "state" in user_data:
                     new_state = user_data["state"]

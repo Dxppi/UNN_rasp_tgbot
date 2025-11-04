@@ -15,11 +15,11 @@ class ChangeHandler(Handler):
             and update["message"]["text"].strip().startswith("/change")
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /change"""
         chat_id = update["message"]["chat"]["id"]
 
         data["state"] = "WAITING_FOR_GROUP"
-        dispatcher.messenger.send_message(chat_id, "Введите новый номер группы")
+        messenger.send_message(chat_id, "Введите новый номер группы")
 
         return HandlerStatus.STOP

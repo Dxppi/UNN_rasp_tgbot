@@ -18,7 +18,7 @@ class GroupInputHandler(Handler):
             and not update["message"]["text"].strip().startswith("/")
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает ввод номера группы"""
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
@@ -30,10 +30,10 @@ class GroupInputHandler(Handler):
             data["group_number"] = group_number
             data["group_id"] = group_id
 
-            if dispatcher.database:
-                dispatcher.database.save_user_group(telegram_id, group_number, group_id)
+            if database:
+                database.save_user_group(telegram_id, group_number, group_id)
 
-            dispatcher.messenger.send_message(
+            messenger.send_message(
                 chat_id,
                 f"Номер группы '{group_number}' сохранен!\n",
                 reply_markup=main_menu_keyboard(),
@@ -42,7 +42,7 @@ class GroupInputHandler(Handler):
             data["state"] = None
 
         except Exception as e:
-            dispatcher.messenger.send_message(
+            messenger.send_message(
                 chat_id, f"Ошибка: {str(e)}\nПопробуйте ввести группу снова."
             )
 

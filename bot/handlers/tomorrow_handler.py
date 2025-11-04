@@ -20,14 +20,14 @@ class TomorrowHandler(Handler):
             )
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /tomorrow"""
         chat_id = update["message"]["chat"]["id"]
         group_id = data["group_id"]
 
         tomorrow = (get_moscow_time() + timedelta(days=1)).date()
         send_schedule_to_user(
-            dispatcher.messenger,
+            messenger,
             chat_id,
             group_id,
             tomorrow,

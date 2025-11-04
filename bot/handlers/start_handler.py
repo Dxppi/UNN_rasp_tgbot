@@ -16,21 +16,21 @@ class StartHandler(Handler):
             and update["message"]["text"].strip().startswith("/start")
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /start"""
         chat_id = update["message"]["chat"]["id"]
         group_id = data.get("group_id")
 
         if group_id:
             group_number = data["group_number"]
-            dispatcher.messenger.send_message(
+            messenger.send_message(
                 chat_id,
                 f"Добро пожаловать! Ваша группа: {group_number}",
                 reply_markup=main_menu_keyboard(),
             )
             data["state"] = None
         else:
-            dispatcher.messenger.send_message(
+            messenger.send_message(
                 chat_id, "Вас приветствует бот расписания ННГУ, введите номер группы"
             )
             data["state"] = "WAITING_FOR_GROUP"

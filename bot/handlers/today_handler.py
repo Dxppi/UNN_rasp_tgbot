@@ -19,14 +19,14 @@ class TodayHandler(Handler):
             )
         )
 
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(self, update: dict, state, data: dict, messenger, database):
         """Обрабатывает команду /today"""
         chat_id = update["message"]["chat"]["id"]
         group_id = data["group_id"]
 
         current_date = get_moscow_time().date()
         send_schedule_to_user(
-            dispatcher.messenger,
+            messenger,
             chat_id,
             group_id,
             current_date,

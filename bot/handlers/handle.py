@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from domain.database import DatabaseInterface
+from domain.messenger import Messenger
 
 
 class Handler(ABC):
@@ -8,6 +10,13 @@ class Handler(ABC):
         pass
 
     @abstractmethod
-    def handle(self, update: dict, state, data: dict, dispatcher):
+    def handle(
+        self,
+        update: dict,
+        state,
+        data: dict,
+        messenger: Messenger,
+        database: DatabaseInterface,
+    ):
         """Обрабатывает обновление и возвращает статус (CONTINUE или STOP)"""
         pass
