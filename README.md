@@ -9,18 +9,12 @@
 
 Telegram бот для получения расписания занятий ННГУ. Бот использует HTTP запросы через `urllib.request`, реализует диспетчер с поддержкой состояний и сохраняет данные пользователей в SQLite.
 
-### 📋 Требования
-
-- Python 3.11+
-- Telegram Bot Token
-- Интернет соединение
-
 ### 🚀 Быстрый старт
 
 #### 1. Клонирование репозитория
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Dxppi/UNN_rasp_tgbot.git
 cd UNN_rasp_tgbot
 ```
 
@@ -155,18 +149,12 @@ UNN_rasp_tgbot/
 
 Telegram bot for getting NNSU (UNN) class schedules. The bot uses HTTP requests via `urllib.request`, implements a dispatcher with state management, and stores user data in SQLite.
 
-### 📋 Requirements
-
-- Python 3.11+
-- Telegram Bot Token
-- Internet connection
-
 ### 🚀 Quick Start
 
 #### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Dxppi/UNN_rasp_tgbot.git
 cd UNN_rasp_tgbot
 ```
 
