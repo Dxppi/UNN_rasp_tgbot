@@ -1,4 +1,5 @@
 """Доменный интерфейс мессенджера"""
+
 from abc import ABC, abstractmethod
 
 
