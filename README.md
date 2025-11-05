@@ -216,7 +216,7 @@ DB_PATH=database.sqlite
 
 Where:
 - `TOKEN` - your Telegram bot token (get it from [@BotFather](https://t.me/BotFather))
-- `DB_PATH` - path to database file (default: `database.sqlite`)
+- `DB_PATH` - path to database file (default: `data/database.sqlite`)
 
 #### 5. Run Bot
 
