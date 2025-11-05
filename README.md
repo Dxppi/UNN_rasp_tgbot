@@ -57,13 +57,42 @@ python -m bot
 
 ### 🐳 Запуск через Docker
 
-#### Запуск контейнера
+#### 1. Настройка переменных окружения
+
+Создайте файл `.env` в корне проекта:
+
+```env
+TOKEN=your_telegram_bot_token
+```
+
+> **Примечание:** В Docker переменная `DB_PATH` устанавливается автоматически через `docker-compose.yml` и указывает на `/app/data/database.sqlite`.
+
+#### 2. Запуск контейнера
 
 ```bash
 docker-compose up -d
 ```
 
-База данных будет сохраняться в директории `./data` на вашем компьютере.
+#### 3. Просмотр логов
+
+```bash
+docker-compose logs -f bot
+```
+
+#### 4. Остановка контейнера
+
+```bash
+docker-compose down
+```
+
+#### 5. Пересборка контейнера
+
+```bash
+docker-compose build
+docker-compose up -d
+```
+
+**Важно:** База данных сохраняется в директории `./data` в корне проекта. Эта папка монтируется в контейнер, поэтому данные сохраняются между перезапусками контейнера.
 
 ### 📱 Использование бота
 
@@ -197,11 +226,42 @@ python -m bot
 
 ### 🐳 Running with Docker
 
+#### 1. Setup Environment Variables
+
+Create `.env` file in the project root:
+
+```env
+TOKEN=your_telegram_bot_token
+```
+
+> **Note:** In Docker, `DB_PATH` is automatically set via `docker-compose.yml` and points to `/app/data/database.sqlite`.
+
+#### 2. Start Container
+
 ```bash
 docker-compose up -d
 ```
 
-Database will be saved in `./data` directory on your computer.
+#### 3. View Logs
+
+```bash
+docker-compose logs -f bot
+```
+
+#### 4. Stop Container
+
+```bash
+docker-compose down
+```
+
+#### 5. Rebuild Container
+
+```bash
+docker-compose build
+docker-compose up -d
+```
+
+**Important:** Database is saved in `./data` directory in the project root. This folder is mounted into the container, so data persists between container restarts.
 
 ### 📱 Using the Bot
 

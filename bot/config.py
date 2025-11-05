@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=False)
 
 BOT_TOKEN = os.getenv("TOKEN")
 if not BOT_TOKEN:
