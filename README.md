@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ```env
 TOKEN=your_telegram_bot_token
-DB_PATH=database.sqlite
+DB_PATH=data/database.sqlite
 ```
 
 Где:
@@ -73,45 +73,13 @@ TOKEN=your_telegram_bot_token
 docker-compose up -d
 ```
 
-#### 3. Просмотр логов
-
-```bash
-docker-compose logs -f bot
-```
-
-#### 4. Остановка контейнера
+#### 3. Остановка контейнера
 
 ```bash
 docker-compose down
 ```
 
-#### 5. Пересборка контейнера
-
-```bash
-docker-compose build
-docker-compose up -d
-```
-
 **Важно:** База данных сохраняется в директории `./data` в корне проекта. Эта папка монтируется в контейнер, поэтому данные сохраняются между перезапусками контейнера.
-
-### 📱 Использование бота
-
-#### Команды
-
-- `/start` - запустить бота (восстанавливает сохраненную группу или просит ввести новую)
-- `/change` - изменить номер группы
-- `/today` - расписание на сегодня
-- `/tomorrow` - расписание на завтра
-- `/week` - расписание на неделю
-- `/cancel` - отменить текущую операцию
-- `/help` - показать справку (доступна через кнопку "Помощь")
-
-#### Кнопки клавиатуры
-
-- **Сегодня** - получить расписание на сегодня
-- **Завтра** - получить расписание на завтра
-- **Неделя** - получить расписание на неделю
-- **Помощь** - показать справку по командам
 
 ### 💾 База данных
 
@@ -127,51 +95,6 @@ docker-compose up -d
 | `user_id` | INTEGER UNIQUE NOT NULL | Telegram ID пользователя |
 | `group_number` | TEXT NOT NULL | Номер группы (например, "3822Б1ФИ2) |
 | `group_id` | TEXT NOT NULL | Внутренний ID группы из API ННГУ |
-
-#### Пример запросов
-
-Просмотр всех сохраненных пользователей:
-```sql
-SELECT user_id, group_number, group_id FROM user_groups;
-```
-
-Просмотр группы конкретного пользователя:
-```sql
-SELECT group_number, group_id FROM user_groups WHERE user_id = 123456789;
-```
-
-#### Архитектура базы данных
-
-Проект использует паттерн **Repository** с интерфейсом `DatabaseInterface`:
-
-- `db/database_interface.py` - абстрактный интерфейс для работы с БД
-- `db/sqlite_database.py` - реализация для SQLite
-
-Это позволяет легко заменить SQLite на другую БД или использовать моки для тестирования.
-
-### 📁 Структура проекта
-
-```
-UNN_rasp_tgbot/
-├── bot/                    # Основной код бота
-│   ├── handlers/          # Обработчики команд и сообщений
-│   ├── dispatcher.py      # Диспетчер с поддержкой состояний
-│   ├── telegram_api.py    # HTTP клиент для Telegram API
-│   ├── longpolling.py     # Long Polling механизм
-│   └── config.py          # Конфигурация
-├── db/                     # Работа с базой данных
-│   ├── database_interface.py  # Интерфейс БД
-│   └── sqlite_database.py     # Реализация SQLite
-├── parser/                 # Парсинг расписания
-│   └── parseData.py       # Получение данных из API ННГУ
-├── data/                   # Директория для базы данных (создается автоматически)
-├── .env                    # Переменные окружения
-├── requirements.txt        # Зависимости Python
-├── Dockerfile             # Конфигурация Docker
-└── README.md             # Документация
-```
-
----
 
 <a name="english"></a>
 ## English
@@ -211,7 +134,7 @@ Create `.env` file in the project root:
 
 ```env
 TOKEN=your_telegram_bot_token
-DB_PATH=database.sqlite
+DB_PATH=data/database.sqlite
 ```
 
 Where:
@@ -234,53 +157,20 @@ Create `.env` file in the project root:
 TOKEN=your_telegram_bot_token
 ```
 
-> **Note:** In Docker, `DB_PATH` is automatically set via `docker-compose.yml` and points to `/app/data/database.sqlite`.
-
 #### 2. Start Container
 
 ```bash
 docker-compose up -d
 ```
 
-#### 3. View Logs
-
-```bash
-docker-compose logs -f bot
-```
-
-#### 4. Stop Container
+#### 3. Stop Container
 
 ```bash
 docker-compose down
 ```
 
-#### 5. Rebuild Container
-
-```bash
-docker-compose build
-docker-compose up -d
-```
 
 **Important:** Database is saved in `./data` directory in the project root. This folder is mounted into the container, so data persists between container restarts.
-
-### 📱 Using the Bot
-
-#### Commands
-
-- `/start` - start the bot (restores saved group or asks to enter new one)
-- `/change` - change group number
-- `/today` - schedule for today
-- `/tomorrow` - schedule for tomorrow
-- `/week` - schedule for the week
-- `/cancel` - cancel current operation
-- `/help` - show help (available via "Помощь" button)
-
-#### Keyboard Buttons
-
-- **Сегодня** (Today) - get today's schedule
-- **Завтра** (Tomorrow) - get tomorrow's schedule
-- **Неделя** (Week) - get week's schedule
-- **Помощь** (Help) - show command reference
 
 ### 💾 Database
 
@@ -296,46 +186,3 @@ The bot uses SQLite to store user data. Database is automatically created on fir
 | `user_id` | INTEGER UNIQUE NOT NULL | Telegram user ID |
 | `group_number` | TEXT NOT NULL | Group number (e.g., "3822Б1ФИ2") |
 | `group_id` | TEXT NOT NULL | Internal group ID from NNSU API |
-
-#### Example Queries
-
-View all saved users:
-```sql
-SELECT user_id, group_number, group_id FROM user_groups;
-```
-
-View specific user's group:
-```sql
-SELECT group_number, group_id FROM user_groups WHERE user_id = 123456789;
-```
-
-#### Database Architecture
-
-The project uses **Repository pattern** with `DatabaseInterface`:
-
-- `db/database_interface.py` - abstract interface for database operations
-- `db/sqlite_database.py` - SQLite implementation
-
-This allows easy replacement of SQLite with another database or using mocks for testing.
-
-### 📁 Project Structure
-
-```
-UNN_rasp_tgbot/
-├── bot/                    # Main bot code
-│   ├── handlers/          # Command and message handlers
-│   ├── dispatcher.py      # Dispatcher with state management
-│   ├── telegram_api.py    # HTTP client for Telegram API
-│   ├── longpolling.py     # Long Polling mechanism
-│   └── config.py          # Configuration
-├── db/                     # Database layer
-│   ├── database_interface.py  # Database interface
-│   └── sqlite_database.py     # SQLite implementation
-├── parser/                 # Schedule parsing
-│   └── parseData.py       # Fetching data from NNSU API
-├── data/                   # Database directory (created automatically)
-├── .env                    # Environment variables
-├── requirements.txt        # Python dependencies
-├── Dockerfile             # Docker configuration
-└── README.md             # Documentation
-```
