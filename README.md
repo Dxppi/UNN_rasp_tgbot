@@ -47,7 +47,7 @@ DB_PATH=database.sqlite
 
 Где:
 - `TOKEN` - токен вашего Telegram бота (получите у [@BotFather](https://t.me/BotFather))
-- `DB_PATH` - путь к файлу базы данных (по умолчанию: `database.sqlite`)
+- `DB_PATH` - путь к файлу базы данных (по умолчанию: `data/database.sqlite`)
 
 #### 5. Запуск бота
 
