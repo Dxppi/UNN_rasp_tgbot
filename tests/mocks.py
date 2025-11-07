@@ -1,9 +1,3 @@
-class Mock:
-    def init(self, dictionary: dict) -> None:
-        for k, v in dictionary.items():
-            setattr(self, k, v)
-
-
 def create_fake_update(text: str, user_id: int):
     """Создает стандартный update для тестов"""
     return {

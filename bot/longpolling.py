@@ -9,14 +9,10 @@ def start_long_polling(dispatcher: Dispatcher, messenger: Messenger):
 
     try:
         while True:
-            offset = next_update_offset if next_update_offset > 0 else None
-            updates = messenger.get_updates(offset=offset, timeout=5)
-
+            updates = messenger.get_updates(offset=next_update_offset, timeout=10)
             for update in updates:
                 dispatcher.dispatch(update)
-                next_update_offset = max(
-                    next_update_offset, update.get("update_id", 0) + 1
-                )
+                next_update_offset = max(next_update_offset, update["update_id"]) + 1
                 print(".", end="", flush=True)
     except KeyboardInterrupt:
         print("\nОстановка бота...")
